@@ -1,17 +1,15 @@
 package telran.security.accounting.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.mongodb.client.result.DeleteResult;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import telran.exceptions.NotFoundException;
 import telran.security.accounting.dto.AccountDto;
 import telran.security.accounting.exceptions.AccountNotFoundException;
 import telran.security.accounting.exceptions.AccountStateException;
@@ -22,13 +20,14 @@ import telran.security.accounting.model.Account;
 @RequiredArgsConstructor
 public class AccountingServiceImpl implements AccountingService{
 	final MongoTemplate mongoTemplate;
-
+	final PasswordEncoder passwordEncoder;
 	@Override
 	public AccountDto addAccount(AccountDto accountDto) {
 		String email = accountDto.email();
 		Account account = null;
+		AccountDto encodedAccount = getEncoded(accountDto);
 		try {
-			account = mongoTemplate.insert(Account.of(accountDto));
+			account = mongoTemplate.insert(Account.of(encodedAccount));
 		} catch (DuplicateKeyException e) {
 			throw new AccountStateException(email);
 		}
@@ -37,6 +36,14 @@ public class AccountingServiceImpl implements AccountingService{
 	}
 
 	
+
+	private AccountDto getEncoded(AccountDto accountDto) {
+		
+		return new AccountDto(accountDto.email(),
+				passwordEncoder.encode(accountDto.password()), accountDto.roles());
+	}
+
+
 
 	@Override
 	public AccountDto removeAccount(String email) {
