@@ -30,10 +30,7 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-security</artifactId>
-		</dependency>
+		
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -52,15 +49,11 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>telran.spring</groupId>
-			<artifactId>web-exceptions-handler</artifactId>
+			<groupId>telran.exceptions</groupId>
+			<artifactId>web-exceptions</artifactId>
 			<version>0.0.1</version>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.springframework.security/spring-security-crypto -->
-<dependency>
-    <groupId>org.springframework.security</groupId>
-    <artifactId>spring-security-crypto</artifactId>
-</dependency>
+		
 
 	</dependencies>
 
