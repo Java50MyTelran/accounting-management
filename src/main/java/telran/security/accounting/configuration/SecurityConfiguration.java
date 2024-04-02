@@ -22,8 +22,10 @@ public class SecurityConfiguration {
 	SecurityFilterChain configure(HttpSecurity httpSecurity) throws Exception  {
 		httpSecurity.cors(customizer -> customizer.disable());
 		httpSecurity.csrf(customizer -> customizer.disable());
-		httpSecurity.authorizeHttpRequests(customizer -> customizer.anyRequest()
-				.hasAnyRole("USER", "ADMIN"));
+		httpSecurity.authorizeHttpRequests(customizer ->
+		customizer.requestMatchers(HttpMethod.DELETE).hasRole("USER")
+		.requestMatchers(HttpMethod.POST).hasRole("ADMIN")
+		.requestMatchers(HttpMethod.PUT).authenticated());
 		httpSecurity.httpBasic(Customizer.withDefaults());
 		return httpSecurity.build();
 	}

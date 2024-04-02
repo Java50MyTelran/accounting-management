@@ -4,6 +4,8 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -19,10 +21,12 @@ import telran.security.accounting.model.Account;
 @Slf4j
 @RequiredArgsConstructor
 public class AccountingServiceImpl implements AccountingService{
+	private static final String HASH_PASSWORD_FIELD = "hashPassword";
 	final MongoTemplate mongoTemplate;
 	final PasswordEncoder passwordEncoder;
 	@Override
 	public AccountDto addAccount(AccountDto accountDto) {
+		System.out.println(SecurityContextHolder.getContext().getAuthentication().getName());
 		String email = accountDto.email();
 		Account account = null;
 		AccountDto encodedAccount = getEncoded(accountDto);
@@ -43,17 +47,37 @@ public class AccountingServiceImpl implements AccountingService{
 				passwordEncoder.encode(accountDto.password()), accountDto.roles());
 	}
 
-
+private Query queryByEmail(String email) {
+	return new Query(Criteria.where("email")
+			.is(email));
+}
 
 	@Override
 	public AccountDto removeAccount(String email) {
-		Account account = mongoTemplate.findAndRemove(new Query(Criteria.where("email")
-				.is(email)), Account.class);
+		Account account = mongoTemplate.findAndRemove(queryByEmail(email), Account.class);
 		if(account == null) {
 			throw new AccountNotFoundException(email);
 		}
 		log.debug("account {} has been removed", email);
 		return account.build();
+	}
+
+
+
+	@Override
+	public void updatePassword(String email, String newPassword) {
+		String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
+		if (!currentUser.equals(email)) {
+			throw new IllegalArgumentException("Username mismatching");
+		}
+		Update update = new Update();
+		String hashPassword = passwordEncoder.encode(newPassword);
+		update.set(HASH_PASSWORD_FIELD, hashPassword);
+		Account account = mongoTemplate.findAndModify(queryByEmail(email), update, Account.class);
+		if(account == null) {
+			throw new AccountNotFoundException(email);
+		}
+		log.debug("password of account {} has been updated", email);
 	}
 	
 }
